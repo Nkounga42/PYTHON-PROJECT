@@ -1,10 +1,8 @@
 import sys
 import time
 import os
-import ctypes
 import winreg
-from tkinter import PhotoImage
-
+from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget,
@@ -12,7 +10,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QVBoxLayout, QWi
                              QGroupBox, QFontComboBox, QHBoxLayout)
 
 
-from PyQt5.QtCore import QTimer, Qt, QPoint, QSettings, QStandardPaths
+from PyQt5.QtCore import QTimer, Qt, QPoint, QSettings, QStandardPaths, QSize
 import webbrowser
 
 
@@ -223,7 +221,7 @@ class SettingsWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Paramètres")
-        self.setWindowIcon(QIcon("assets/widgetHora x64.png"))
+        self.setWindowIcon(QIcon("assets/images/widgetHora x64.png"))
         self.setGeometry(100, 100, 400, 400)
 
         self.panel = SettingsPanel(parent_clock)
@@ -439,7 +437,7 @@ class AboutWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("À propos")
-        self.setWindowIcon(QIcon("assets/widgetHora x64.png"))
+        self.setWindowIcon(QIcon("assets/images/widgetHora x64.png"))
 
         self.setFixedSize(300, 300)
         self.init_ui()
@@ -449,7 +447,7 @@ class AboutWindow(QWidget):
 
         # Logo de l'app
         logo_label = QLabel()
-        pixmap = QPixmap("assets/widgetHora x64.png")
+        pixmap = QPixmap("assets/images/widgetHora x64.png")
         pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         logo_label.setPixmap(pixmap)
         logo_label.setAlignment(Qt.AlignCenter)
@@ -469,7 +467,27 @@ class AboutWindow(QWidget):
         # Bouton GitHub
         btn_github = QPushButton("Voir sur GitHub")
         btn_github.clicked.connect(self.open_github)
+        icon = QIcon("assets/svg/github_logo.svg")
 
+        btn_github.setIcon(icon)
+        btn_github.setIconSize(QSize(20, 20))
+
+        btn_github.setStyleSheet("""
+            QPushButton {
+                background-color: #24292e;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-size: 16px; 
+            }
+            QPushButton:hover {
+                background-color: #333;
+            }
+            QPushButton:pressed {
+                background-color: #000;
+            }
+        """)
         # Ajout des widgets au layout
         layout.addStretch()
         layout.addWidget(logo_label)
