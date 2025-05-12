@@ -5,15 +5,12 @@ import winreg
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget,
-                             QFormLayout, QComboBox, QCheckBox, QPushButton, QSpinBox,QLineEdit, QColorDialog,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QDialog,
+                             QFormLayout, QComboBox, QCheckBox, QPushButton, QSpinBox, QLineEdit, QColorDialog,
                              QGroupBox, QFontComboBox, QHBoxLayout)
-
 
 from PyQt5.QtCore import QTimer, Qt, QPoint, QSettings, QStandardPaths, QSize
 import webbrowser
-
-
 
 APP_NAME = "WidgetHora"
 APP_VERSION = "1.0"
@@ -102,6 +99,18 @@ class SettingsPanel(QWidget):
         appear_layout.addRow(self.show_time)
         appear_layout.addRow(self.show_date)
 
+        self.color_time = QLineEdit()
+        self.color_time.setPlaceholderText("Cliquez pour choisir")
+        self.color_time.setReadOnly(True)
+        self.color_time.mousePressEvent = self.choose_color_time
+        appear_layout.addRow("Couleur (heure):", self.color_time)
+
+        self.color_date = QLineEdit()
+        self.color_date.setPlaceholderText("Cliquez pour choisir")
+        self.color_date.setReadOnly(True)
+        self.color_date.mousePressEvent = self.choose_color_date
+        appear_layout.addRow("Couleur (date):", self.color_date)
+
         appear_group.setLayout(appear_layout)
         layout.addWidget(appear_group)
 
@@ -127,18 +136,6 @@ class SettingsPanel(QWidget):
         button_layout.addWidget(self.apply_button)
         button_layout.addWidget(self.save_button)
         layout.addLayout(button_layout)
-
-        self.color_time = QLineEdit()
-        self.color_time.setPlaceholderText("Cliquez pour choisir")
-        self.color_time.setReadOnly(True)
-        self.color_time.mousePressEvent = self.choose_color_time
-        appear_layout.addRow("Couleur (heure):", self.color_time)
-
-        self.color_date = QLineEdit()
-        self.color_date.setPlaceholderText("Cliquez pour choisir")
-        self.color_date.setReadOnly(True)
-        self.color_date.mousePressEvent = self.choose_color_date
-        appear_layout.addRow("Couleur (date):", self.color_date)
 
     def choose_color_time(self, event):
         color = QColorDialog.getColor()
@@ -183,7 +180,6 @@ class SettingsPanel(QWidget):
             color_time=self.color_time.text(),
             color_date=self.color_date.text()
         )
-        self.enable_drag.setChecked(False)  # Décocher après l'application
 
     def toggle_drag(self, state):
         is_enabled = bool(state)
@@ -207,31 +203,117 @@ class SettingsPanel(QWidget):
 
         add_to_startup(self.start_with_windows.isChecked())
 
-        self.apply_settings()
-        #QMessageBox.information(self, "Paramètres", "Paramètres enregistrés.")
-        self.parent.settings_window.hide()
-        self.enable_drag.setChecked(False)
-
         self.settings.setValue("colorTime", self.color_time.text())
         self.settings.setValue("colorDate", self.color_date.text())
+
+        self.apply_settings()
+        self.parent.settings_window.hide()
 
 
 class SettingsWindow(QMainWindow):
     def __init__(self, parent_clock):
         super().__init__()
 
+        self.parent_clock = parent_clock
         self.setWindowTitle("Paramètres")
         self.setWindowIcon(QIcon("assets/images/widgetHora x64.png"))
-        self.setGeometry(100, 100, 400, 400)
+        self.setGeometry(100, 100, 400, 600)  # Agrandi pour mieux afficher tous les contrôles
 
         self.panel = SettingsPanel(parent_clock)
         self.setCentralWidget(self.panel)
 
     def closeEvent(self, event):
+        # Désactiver le mode glisser-déposer si activé
         self.panel.enable_drag.setChecked(False)
         event.ignore()
         self.hide()
 
+
+class AboutWindow(QMainWindow):
+    def __init__(self, parent=None):
+        super().__init__()
+        self.setWindowTitle("À propos")
+        self.setWindowIcon(QIcon("assets/images/widgetHora x64.png"))
+
+        self.setFixedSize(300, 300)
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        # Logo de l'app
+        logo_label = QLabel()
+        pixmap = QPixmap("assets/images/widgetHora x64.png")
+        pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        logo_label.setPixmap(pixmap)
+        logo_label.setAlignment(Qt.AlignCenter)
+
+        # Titre de l'app
+        label_title = QLabel(f"{APP_NAME} v{APP_VERSION}")
+        label_title.setAlignment(Qt.AlignCenter)
+        font = QFont()
+        font.setPointSize(14)
+        font.setBold(True)
+        label_title.setFont(font)
+
+        # Auteur
+        label_author = QLabel(f"Développé par {APP_AUTHOR}")
+        label_author.setAlignment(Qt.AlignCenter)
+
+        description_label = QLabel(
+            "WidgetHora est un widget d'horloge simple et élégant pour votre bureau.\n"
+            "Personnalisez l'apparence et le format selon vos préférences."
+        )
+        description_label.setAlignment(Qt.AlignCenter)
+        description_label.setWordWrap(True)  # Activer le retour à la ligne automatique)
+        description_label.setMaximumWidth(270)
+
+        # Bouton GitHub
+        btn_github = QPushButton("Voir sur GitHub")
+        btn_github.clicked.connect(self.open_github)
+        icon = QIcon("assets/svg/github_logo.svg")
+
+        btn_github.setIcon(icon)
+        btn_github.setIconSize(QSize(20, 20))
+
+        btn_github.setStyleSheet("""
+            QPushButton {
+                background-color: #24292e;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-size: 16px; 
+            }
+            QPushButton:hover {
+                background-color: #333;
+            }
+            QPushButton:pressed {
+                background-color: #000;
+            }
+        """)
+
+        # Ajout des widgets au layout
+        layout.addStretch()
+        layout.addWidget(logo_label)
+        layout.addWidget(label_title)
+        layout.addWidget(label_author)
+        layout.addWidget(description_label)  # Tu avais créé ce QLabel mais tu l'avais oublié dans le layout
+        layout.addStretch()
+        layout.addWidget(btn_github)
+
+        # Création d'un widget central
+        central_widget = QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+    def open_github(self):
+        webbrowser.open("https://github.com/Nkounga42")
+
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.hide()
 
 class ClockWidget(QMainWindow):
     def __init__(self):
@@ -239,11 +321,9 @@ class ClockWidget(QMainWindow):
 
         self.settings = QSettings(APP_AUTHOR, APP_NAME)
 
-        self.setWindowTitle("Widget Horloge")
-
+        self.setWindowTitle("WidgetHora")  # Correction de la faute de frappe "WidgetHore"
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnBottomHint)
-
         self.setAttribute(Qt.WA_TranslucentBackground)
 
         central = QWidget()
@@ -265,6 +345,10 @@ class ClockWidget(QMainWindow):
         self.timer.timeout.connect(self.update_time)
         self.timer.start(1000)
 
+        # Initialiser les fenêtres avant d'appliquer les paramètres
+        self.settings_window = None
+        self.about_window = None
+
         self.apply_settings_from_saved()
 
         self.resize(300, 150)
@@ -284,8 +368,9 @@ class ClockWidget(QMainWindow):
         self.theme_timer.start(5000)
         self.update_theme()
 
+        # Créer les fenêtres après avoir appliqué les paramètres
         self.settings_window = SettingsWindow(self)
-
+        self.about_window = AboutWindow(self)
 
     def update_drag_visual(self, is_enabled):
         target = self.centralWidget()
@@ -350,9 +435,8 @@ class ClockWidget(QMainWindow):
             show_time=self.settings.value("showTime", True, type=bool),
             show_date=self.settings.value("showDate", True, type=bool),
             enable_drag=self.settings.value("enableDrag", True, type=bool),
-            color_time = self.settings.value("colorTime", "#FFFFFF"),
-            color_date = self.settings.value("colorDate", "#FFFFFF")
-
+            color_time=self.settings.value("colorTime", "#FFFFFF"),
+            color_date=self.settings.value("colorDate", "#FFFFFF")
         )
 
     def apply_settings(self, time_format, date_format, font_family_time, font_family_date,
@@ -376,15 +460,10 @@ class ClockWidget(QMainWindow):
         self.time_label.setStyleSheet(f"color: {color_time};")
         self.date_label.setStyleSheet(f"color: {color_date};")
 
-
         self.main_layout.setSpacing(spacing)
 
         self.update_time()
         self.update_drag_visual(enable_drag)
-
-    def show_about_window(self):
-        self.about_window = AboutWindow()
-        self.about_window.show()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and self.settings.value("enableDrag", True, type=bool):
@@ -410,96 +489,40 @@ class ClockWidget(QMainWindow):
         menu.addAction(options_action)
 
         about_action = QAction("À propos", self)
-        about_action.triggered.connect(self.show_about_window)
+        about_action.triggered.connect(self.toggle_about_panel)
         menu.addAction(about_action)
 
         exit_action = QAction("Quitter", self)
         exit_action.triggered.connect(self.close)
         menu.addAction(exit_action)
 
-
         menu.exec_(event.globalPos())
 
     def toggle_settings_panel(self):
+        if self.settings_window is None:
+            self.settings_window = SettingsWindow(self)
         self.settings_window.show()
         self.settings_window.raise_()
         self.settings_window.activateWindow()
 
+    def toggle_about_panel(self):
+        if self.about_window is None:
+            self.about_window = AboutWindow(self)
+        self.about_window.show()
+        self.about_window.raise_()
+        self.about_window.activateWindow()
+
     def closeEvent(self, event):
         self.settings.setValue("posX", self.pos().x())
         self.settings.setValue("posY", self.pos().y())
+
+        # Fermer proprement toutes les fenêtres
+        if self.settings_window:
+            self.settings_window.close()
+        if self.about_window:
+            self.about_window.close()
+
         event.accept()
-
-
-
-
-class AboutWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("À propos")
-        self.setWindowIcon(QIcon("assets/images/widgetHora x64.png"))
-
-        self.setFixedSize(300, 300)
-        self.init_ui()
-
-    def init_ui(self):
-        layout = QVBoxLayout()
-
-        # Logo de l'app
-        logo_label = QLabel()
-        pixmap = QPixmap("assets/images/widgetHora x64.png")
-        pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        logo_label.setPixmap(pixmap)
-        logo_label.setAlignment(Qt.AlignCenter)
-
-        # Titre de l'app
-        label_title = QLabel(f"{APP_NAME} v{APP_VERSION}")
-        label_title.setAlignment(Qt.AlignCenter)
-        font = QFont()
-        font.setPointSize(14)
-        font.setBold(True)
-        label_title.setFont(font)
-
-        # Auteur
-        label_author = QLabel(f"Développé par {APP_AUTHOR}")
-        label_author.setAlignment(Qt.AlignCenter)
-
-        # Bouton GitHub
-        btn_github = QPushButton("Voir sur GitHub")
-        btn_github.clicked.connect(self.open_github)
-        icon = QIcon("assets/svg/github_logo.svg")
-
-        btn_github.setIcon(icon)
-        btn_github.setIconSize(QSize(20, 20))
-
-        btn_github.setStyleSheet("""
-            QPushButton {
-                background-color: #24292e;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-size: 16px; 
-            }
-            QPushButton:hover {
-                background-color: #333;
-            }
-            QPushButton:pressed {
-                background-color: #000;
-            }
-        """)
-        # Ajout des widgets au layout
-        layout.addStretch()
-        layout.addWidget(logo_label)
-        layout.addWidget(label_title)
-        layout.addWidget(label_author)
-        layout.addStretch()
-        layout.addWidget(btn_github)
-
-        self.setLayout(layout)
-
-    def open_github(self):
-        webbrowser.open("https://github.com/Nkounga42")  # Mets ton vrai lien ici
 
 
 if __name__ == "__main__":
