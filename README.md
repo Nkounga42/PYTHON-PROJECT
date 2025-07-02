@@ -23,13 +23,13 @@ Ce projet a pour but de proposer une horloge **élégante**, **moderne**, **lég
 ## 📸 Aperçu en images
 
 ### 1. Horloge sur le bureau  
-![Widget principal](https://raw.githubusercontent.com/Nkounga42/PYTHON-PROJECT/master/Capture%20d'%C3%A9cran%202025-07-02%20005153.png)
+![Fenêtre À propos](https://raw.githubusercontent.com/Nkounga42/PYTHON-PROJECT/master/Capture%20d'%C3%A9cran%202025-07-02%20005241.png)
 
 ### 2. Panneau de paramètres  
 ![Panneau de configuration](https://raw.githubusercontent.com/Nkounga42/PYTHON-PROJECT/master/Capture%20d'%C3%A9cran%202025-07-02%20005205.png)
 
 ### 3. Fenêtre « À propos »  
-![Fenêtre À propos](https://raw.githubusercontent.com/Nkounga42/PYTHON-PROJECT/master/Capture%20d'%C3%A9cran%202025-07-02%20005241.png)
+![Widget principal](https://raw.githubusercontent.com/Nkounga42/PYTHON-PROJECT/master/Capture%20d'%C3%A9cran%202025-07-02%20005153.png)
 
 ---
 
